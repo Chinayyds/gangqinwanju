@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            /* background: url(img/img.jpg) no-repeat; */
+            background-size: 100% 100%;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .container {
+            text-align: center;
+            margin: 200px auto;
+        }
+        
+        li {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 200px;
+            background-color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.5em;
+            box-shadow: 0 0 5px 3px rgba(0, 0, 0, 0.5);
+        }
+        
+        li span {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            bottom: 20px;
+        }
+        
+        .low::after {
+            content: '.';
+            position: absolute;
+            left: 0;
+            bottom: 10px;
+            width: 100%;
+        }
+        
+        .high::after {
+            content: '.';
+            position: absolute;
+            left: 0;
+            bottom: 45px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <ul class="container">
+        <li key='q' class="low"><span>1</span></li>
+        <li key='w' class="low"><span>2</span></li>
+        <li key='e' class="low"><span>3</span></li>
+        <li key='r' class="low"><span>4</span></li>
+        <li key='t' class="low"><span>5</span></li>
+        <li key='y' class="low"><span>6</span></li>
+        <li key='u' class="low"><span>7</span></li>
+        <li key='1'><span>1</span></li>
+        <li key='2'><span>2</span></li>
+        <li key='3'><span>3</span></li>
+        <li key='4'><span>4</span></li>
+        <li key='5'><span>5</span></li>
+        <li key='6'><span>6</span></li>
+        <li key='7'><span>7</span></li>
+        <li key='a' class="high"><span>1</span></li>
+        <li key='s' class="high"><span>2</span></li>
+        <li key='d' class="high"><span>3</span></li>
+        <li key='f' class="high"><span>4</span></li>
+        <li key='g' class="high"><span>5</span></li>
+        <li key='h' class="high"><span>6</span></li>
+        <li key='j' class="high"><span>7</span></li>
+    </ul>
+</body>
+<script>
+    // var ctx;
+    // var g = ctx.createGain()
+    // g.connect(ctx.desination)
+    // g.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.01)
+    //     //在0.01s时间内从音量音高从value值变到0.6
+    // g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration)
+    //     //音高在duration时间内由原value变为0.01
+    // var osc = ctx.createOscillator();
+    // osc.connect(g)
+    var ctx;
+
+    function setContext() {
+        if (!ctx) {
+            ctx = new AudioContext()
+        }
+    }
+
+    function makeSound(index) { // 钢琴传入是钢琴的第几个按键
+        setContext(); //获得上下文
+        var osc = ctx.createOscillator() //获得音频振荡器
+        var g = ctx.createGain() //获得音量控制器
+        osc.connect(g) //连接音量控制器
+        osc.type = 'sine' //设置波形
+        osc.frequency.value = sounds[index] //对应钢琴不同键的不同频率
+        var duration = 1 //控制时间
+        g.connect(ctx.destination) //连接扬声器
+        g.gain.value = 0 //初始音高为0
+        osc.start(); //从当前开始发生
+        g.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.01) //从当前时间到0.01s后，音高从0~0.6
+        osc.stop(ctx.currentTime + duration); //当前时间duration后停止
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration) //从0.6~0.01
+    }
+    var sounds = [131, 147, 165, 175, 196, 220, 246, 262, 294, 330, 349, 392, 440, 494,
+            523, 587, 659, 698, 784, 880, 988, 1047
+        ]
+        //点击钢琴样式改变
+    function changeColor(li) {
+
+        li.style.background = '#ccc';
+        setTimeout(function() {
+            li.style.background = '#fff';
+        }, 100)
+    }
+    var container = document.getElementsByClassName('container')[0];
+
+    //函数控制钢琴键点击事件钢琴键样式的改变
+    container.onclick = function(e) {
+
+        if (e.target.tagName === 'UL') {
+            return;
+        }
+
+        li = e.target;
+        //点击到SPAN要控制父级变色
+        if (e.target.tagName == 'SPAN') {
+            li = e.target.parentNode
+        }
+
+        changeColor(li);
+        //获得钢琴是第几键
+        var index = getIndex(li);
+        makeSound(index);
+    }
+
+
+    window.onkeydown = function(e) {
+        //属性选择器
+        var selector = "li[key=\"" + e.key + "\"]"
+
+        var li = document.querySelector(selector);
+
+        if (li) {
+            this.changeColor(li);
+            var index = getIndex(li);
+            makeSound(index);
+        }
+    }
+
+
+    function setContent() {
+        if (!ctx) {
+            ctx = new AudioContext()
+        }
+    }
+
+    function getIndex(li) {
+        var ul = li.parentNode;
+        //Array.from（类数组）返回真数组
+        var children = Array.from(ul.children)
+        return children.indexOf(li);
+    }
+
+    function makeSound(index) {
+        // 获得音频上下文
+        setContent();
+        //得到音频振荡器
+        var osc = ctx.createOscillator();
+        //得到音量控制对象
+        var g = ctx.createGain();
+
+        // 连接振荡器和音量控制对象
+        osc.connect(g);
+        osc.type = 'sine';
+        osc.frequency.value = sounds[index];
+
+        var duration = 1;
+
+        g.connect(ctx.destination);
+        g.gain.value = 0;
+        osc.start();
+        g.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.01)
+
+        osc.stop(ctx.currentTime + duration);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration)
+
+
+    }
+</script>
+
+</html>
